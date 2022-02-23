@@ -76,7 +76,14 @@ export default {
         setTimeout(() => callback(configurationData));
     },
 
-    //用户进行搜索时调用
+    /**
+     * 用户输入搜索时的回调
+     * @param userInput 用户输入的搜索字符串
+     * @param exchange  交易所
+     * @param symbolType    商品类型 configurationData.symbols_types[]中的元素
+     * @param onResultReadyCallback
+     * @returns {Promise<void>}
+     */
     searchSymbols: async (
         userInput,
         exchange,
@@ -92,6 +99,18 @@ export default {
                 .indexOf(userInput.toLowerCase()) !== -1;
             return isExchangeValid && isFullSymbolContainsInput;
         });
+        /**
+         *
+         * newSymbols 元素结构
+         * {
+         *         "symbol": "<short symbol name>",
+         *         "full_name": "<full symbol name>", // e.g. BTCE:BTCUSD
+         *         "description": "<symbol description>",
+         *         "exchange": "<symbol exchange name>",
+         *         "ticker": "<symbol ticker name, optional>",
+         *         "type": "stock" // or "futures" or "crypto" or "forex" or "index"
+         *  }
+         */
         onResultReadyCallback(newSymbols);
     },
 
@@ -112,21 +131,21 @@ export default {
             return;
         }
         const symbolInfo = {
-            ticker: symbolItem.full_name,
-            name: symbolItem.symbol,
-            description: symbolItem.description,
-            type: symbolItem.type,
+            ticker: symbolItem.full_name, //  唯一标识符，如果没有会使用name
+            name: symbolItem.symbol,       //  币种名称
+            description: symbolItem.description, //  币种描述
+            type: symbolItem.type,  // 图标类型
             session: '24x7',
-            timezone: 'Etc/UTC',
-            exchange: symbolItem.exchange,
-            minmov: 1,
-            pricescale: 100,
-            has_intraday: false,
-            has_no_volume: true,
-            has_weekly_and_monthly: false,
-            supported_resolutions: configurationData.supported_resolutions,
-            volume_precision: 2,
-            data_status: 'streaming',
+            timezone: 'Etc/UTC',  // 时区Asia/Hong_Kong
+            exchange: symbolItem.exchange,  //交易所简称
+            minmov: 1,       // 最小交易量
+            pricescale: 100,  // 价格精度
+            has_intraday: false,  // 是否支持分时图
+            has_no_volume: true, // 是否支持成交量
+            has_weekly_and_monthly: false, // 是否支持周和月
+            supported_resolutions: configurationData.supported_resolutions, // 支持的分辨率
+            volume_precision: 2, // 成交量精度
+            data_status: 'streaming', // 数据状态, 显示在图表右上角
         };
 
         console.log('[resolveSymbol]: Symbol resolved', symbolName);
