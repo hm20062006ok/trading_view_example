@@ -46,20 +46,24 @@ const configurationData = {
 
 // 从api获取所有 symbols
 async function getAllSymbols() {
+    // 所有交易所
     const data = await makeApiRequest('data/v3/all/exchanges');
     let allSymbols = [];
 
     for (const exchange of configurationData.exchanges) {
-        const pairs = data.Data[exchange.value].pairs;
+        // 取出配置交易所中的交易对
+    const pairs = data.Data[exchange.value].pairs;
 
+        // 
         for (const leftPairPart of Object.keys(pairs)) {
             const symbols = pairs[leftPairPart].map(rightPairPart => {
+                // 将交易对转换为 symbol: Bitfinex:   BTC          /             USD
                 const symbol = generateSymbol(exchange.value, leftPairPart, rightPairPart);
                 return {
-                    symbol: symbol.short,
-                    full_name: symbol.full,
-                    description: symbol.short,
-                    exchange: exchange.value,
+                    symbol: symbol.short,//btc/usd
+                    full_name: symbol.full, //Bitfinex:BTC/USD
+                    description: symbol.short, //btc/usd
+                    exchange: exchange.value,   //Bitfinex
                     type: 'crypto',
                 };
             });
@@ -151,10 +155,38 @@ export default {
         console.log('[resolveSymbol]: Symbol resolved', symbolName);
         onSymbolResolvedCallback(symbolInfo);
     },
-
+    
+    /**
+     *  获取指定交易对的历史数据
+     * @param {*} symbolInfo 交易对信息
+     * @param {*} resolution 分辨率,日, 月, 年等等
+     * @param {*} periodParams  周期参数, 包含以下字段: 
+     * from:unix 时间戳, 开始时间, 包含
+     * countBack: 需要加载的bars确切数量(如果api支持), 如果用户指定特定时间段, 则可能没有.
+     * to: unix 时间戳, 结束时间, 不包含
+     * firstDataRequest 是否第一次请求数据, 如果是, 你可以忽略to参数而返回最新的数据
+     * @param {*} onHistoryCallback 接收两个参数:
+     * bars: 数据数组, 每个元素是一个对象, 包含以下字段:
+     * {time: unix 时间戳,
+     * open: 开盘价,
+     * high: 最高价,
+     * low: 最低价,
+     * close: 收盘价,
+     * volume: 成交量
+     * }
+     * 
+     * information: 
+     * {
+     * noData: 是否没有数据,
+     * nextTime: 下一个数据的时间戳,
+     * }
+     * @param {*} onErrorCallback 
+     * @returns 
+     */
     getBars: async (symbolInfo, resolution, periodParams, onHistoryCallback, onErrorCallback) => {
         const { from, to, firstDataRequest } = periodParams;
         console.log('[getBars]: Method call', symbolInfo, resolution, from, to);
+        debugger
         const parsedSymbol = parseFullSymbol(symbolInfo.full_name);
         const urlParameters = {
             e: parsedSymbol.exchange,
